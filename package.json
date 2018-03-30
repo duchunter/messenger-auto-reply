@@ -3,18 +3,30 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node build/bin/www.js",
+    "demon": "nodemon ./server/bin/www.js --exec babel-node",
+    "build": "babel server -d build",
+    "serve": "node build/bin/www.js"
   },
   "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-latest": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "bluebird": "^3.5.1",
     "body-parser": "~1.18.2",
     "cookie-parser": "~1.4.3",
     "cors": "^2.8.4",
     "debug": "~2.6.9",
     "dotenv": "^5.0.1",
     "express": "~4.15.5",
+    "express-jwt": "^5.3.1",
+    "express-jwt-authz": "^1.0.0",
     "facebook-chat-api": "^1.5.0",
     "jade": "~1.11.0",
+    "jwks-rsa": "^1.2.1",
     "morgan": "~1.9.0",
+    "pg-promise": "^8.2.2",
     "request": "^2.85.0",
     "serve-favicon": "~2.4.5"
   }

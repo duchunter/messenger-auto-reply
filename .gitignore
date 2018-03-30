@@ -1,2 +1,5 @@
 node_modules
 .env
+build
+server/utils/sendLog.js
+server/utils/auth0Config.js

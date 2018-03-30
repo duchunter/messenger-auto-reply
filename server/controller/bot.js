@@ -1,19 +1,12 @@
-var express = require('express');
-var router = express.Router();
-var request = require("request");
-var login = require("facebook-chat-api");
+'use strict'
+
+import request from "request";
+import login from "facebook-chat-api";
 
 const period = 1790000; // 29:50
 const defaultMsg = `BOT: I'm currently busy, please leave a message here, i will answer as soon as posible`;
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  console.log('Ping');
-  res.render('index', { title: 'Express' });
-});
-
-// POST timer
-router.post('/timer', (req, res) => {
+export function (req, res) => {
   var answeredThreads = {};
   login({
     email: process.env.FB_ACCOUNT,
@@ -42,6 +35,4 @@ router.post('/timer', (req, res) => {
   setTimeout(() => {
     clearInterval(loop);
   }, req.body.timer || 0);
-});
-
-module.exports = router;
+}

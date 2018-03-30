@@ -4,8 +4,10 @@
  * Module dependencies.
  */
 
-var app = require('../app');
+import "babel-polyfill";
 require('dotenv').config();
+
+var app = require('../app');
 var debug = require('debug')('mess-bot:server');
 var http = require('http');
 
