@@ -2,18 +2,17 @@
 
 import promise from 'bluebird';
 import pg from 'pg-promise';
-import read from './methods/read';
 import create from './methods/create';
+import read from './methods/read';
 import update from './methods/update';
 import remove from './methods/remove';
-import count from './methods/count';
 
 const pgp = pg({
   promiseLib: promise
 });
 
 // Comment this when deploy
-const connectionString = 'postgres://localhost:5432/link';
+const connectionString = 'postgres://localhost:5432/replybot';
 const db = pgp(process.env.DATABASE_URL || connectionString);
 
 // READ
@@ -34,9 +33,4 @@ export async function updateInTable({ table, changes, condition }) {
 // REMOVE
 export async function delFromTable({ table, condition}) {
   return await remove({ db, table, condition });
-}
-
-// COUNT
-export async function countInTable({ table, col, condition }) {
-  return await count({ db, table, col, condition });
 }

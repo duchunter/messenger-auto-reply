@@ -3,12 +3,13 @@ CREATE DATABASE replybot;
 
 \c replybot;
 
-CREATE TABLE Bots (
+CREATE TABLE Accounts (
   id SERIAL PRIMARY KEY,
   email VARCHAR,
   password VARCHAR,
   appstate TEXT,
-  active VARCHAR
+  start BIGINT,
+  stop BIGINT
 );
 
 CREATE TABLE Logs (
@@ -16,10 +17,4 @@ CREATE TABLE Logs (
   created BIGINT,
   code VARCHAR,
   content TEXT
-);
-
-INSERT INTO Logs (
-  created, code, content
-) VALUES (
-  '1', 'code', 'content'
 );
