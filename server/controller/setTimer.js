@@ -13,8 +13,8 @@ export default async function (req, res) {
   let answeredThreads = {};
 
   // Must-have data
-  let { email, duration, msg } = req.body;
-  if (!email || !duration) {
+  let { email, stop, msg } = req.body;
+  if (!email || !stop) {
     res.status(400).json('Missing info');
     return;
   }
@@ -25,11 +25,13 @@ export default async function (req, res) {
     condition: { email },
   });
 
+  // If user not exist
   if (users.length == 0) {
     res.status(404).json('No user found');
     return;
   }
 
+  // Ok -> get appstate or credential to login
   let user = users[0];
   let credentials = {};
   if (!user.appstate) {
@@ -56,36 +58,41 @@ export default async function (req, res) {
     addLog({
       code: 'login',
       msg: `Login success using ${user.appstate ? 'appstate' : 'user-pw'}. `
-           + `Timer set for ${duration}`,
+           + `Timer stop at ${new Date(stop).toString()}`,
     });
     api.setOptions({
         forceLogin: true,
         logLevel: "silent"
     });
 
+    // Save info in db
     updateInTable({
       table: 'Accounts',
       condition: { email },
       changes: {
         start,
-        stop: start + duration,
-        appstate: !user.appstate ? JSON.stringify(api.getAppState()) : null,
+        stop,
+        msg: msg || defaultMsg,
+        appstate: user.appstate || JSON.stringify(api.getAppState()),
       },
     }).then(success => {
+      // If cannot save info to db
       if (!success) {
         addLog({
           code: 'error',
           msg: 'Cannot update info of ' + email,
         });
-
         res.status(500).json('Cannot set timer');
       } else {
+        // Saved -> set keep-alive interval
         res.status(200).json('Timer set');
         let loop = setInterval(() => {
+          // Get user data
           scanTable({
             table: 'Accounts',
             condition: { email }
           }).then(users => {
+            // User not exist (somehow) -> stop interval
             if (users.length == 0) {
               addLog({
                 code: 'error',
@@ -94,6 +101,7 @@ export default async function (req, res) {
 
               clearInterval(loop);
             } else {
+              // Check if timer expired
               if (new Date().getTime() >= users[0].stop) {
                 clearInterval(loop);
                 addLog({
@@ -101,7 +109,7 @@ export default async function (req, res) {
                   msg: `${email}: stopping`,
                 });
               } else {
-                // Keep alive
+                // Not expired -> Keep alive
                 request(process.env.BOT_URL, (err, res, html) => {
                   err && addLog({
                     code: 'error',
@@ -119,7 +127,23 @@ export default async function (req, res) {
     api.listen((err, message) => {
       if (!answeredThreads.hasOwnProperty(message.threadID)) {
         answeredThreads[message.threadID] = true;
-        api.sendMessage(msg || defaultMsg , message.threadID);
+        // Get user data to fetch msg
+        scanTable({
+          table: 'Accounts',
+          condition: { email }
+        }).then(users => {
+          // User not exist (somehow) -> reply with default msg
+          if (users.length == 0) {
+            addLog({
+              code: 'error',
+              msg: 'Reply: cannot find user info'
+            });
+            api.sendMessage(defaultMsg, message.threadID);
+          } else {
+            // Reply with msg
+            api.sendMessage(users[0].msg || defaultMsg, message.threadID);
+          }
+        });
       }
     });
   });

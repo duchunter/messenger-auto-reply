@@ -9,7 +9,8 @@ CREATE TABLE Accounts (
   password VARCHAR,
   appstate TEXT,
   start BIGINT,
-  stop BIGINT
+  stop BIGINT,
+  msg TEXT
 );
 
 CREATE TABLE Logs (

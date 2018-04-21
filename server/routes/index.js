@@ -7,6 +7,7 @@ import { authCheck } from '../utils/auth0';
 import sendLog from '../utils/sendLog';
 import setTimer from '../controller/setTimer';
 import stopTimer from '../controller/stopTimer';
+import updateTimer from '../controller/updateTimer';
 
 const router = express.Router();
 const scopeCheck = jwtAuthz(['admin']);
@@ -22,6 +23,9 @@ router.post('/api/set', authCheck, scopeCheck, setTimer);
 
 // POST stop
 router.post('/api/stop', authCheck, scopeCheck, stopTimer);
+
+// POST update timer or message
+router.post('/api/update', authCheck, scopeCheck, updateTimer);
 
 // Request instant log transfer
 router.post('/api/log', authCheck, scopeCheck, (req, res) => {
