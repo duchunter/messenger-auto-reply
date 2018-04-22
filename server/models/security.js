@@ -2,10 +2,10 @@
 
 // Special code
 let transform = {};
-transform['//'] = `'`;
-transform['/?'] = '"'
-transform['|<'] = '(';
-transform['|>'] = ')';
+transform['This_is_a_quote'] = `'`;
+transform['This_is_a_double_quote'] = '"'
+transform['This_is_left_parenthesis'] = '(';
+transform['This_is_right_parenthesis'] = ')';
 
 // Replace sql character to prevent sql injection
 export function noInjection(str) {

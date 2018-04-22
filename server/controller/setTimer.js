@@ -34,11 +34,25 @@ export default async function (req, res) {
   // Ok -> get appstate or credential to login
   let user = users[0];
   let credentials = {};
-  if (!user.appstate) {
+  if (!user.appstate || user.appstate == 'null') {
     credentials.email = user.email;
     credentials.password = user.password;
   } else {
-    credentials.appstate = JSON.parse(user.appstate);
+    try {
+      credentials.appstate = JSON.parse(user.appstate);
+    } catch (e) {
+      addLog({
+        code: 'error',
+        content: 'Login err: cannot parse appstate'
+      });
+      updateInTable({
+        table: 'Accounts',
+        condition: { email },
+        changes: { appstate: 'null' }
+      });
+      credentials.email = user.email;
+      credentials.password = user.password;
+    }
   }
 
   // Login
@@ -48,7 +62,7 @@ export default async function (req, res) {
       res.status(403).json(JSON.stringify(err));
       addLog({
         code: 'error',
-        msg: 'Login err: ' + JSON.stringify(err)
+        content: 'Login err: ' + JSON.stringify(err)
       });
       return;
     }
@@ -57,7 +71,7 @@ export default async function (req, res) {
     let start = new Date().getTime();
     addLog({
       code: 'login',
-      msg: `Login success using ${user.appstate ? 'appstate' : 'user-pw'}. `
+      content: `Login success using ${user.appstate ? 'appstate' : 'user-pw'}. `
            + `Timer stop at ${new Date(stop).toString()}`,
     });
     api.setOptions({
@@ -80,7 +94,7 @@ export default async function (req, res) {
       if (!success) {
         addLog({
           code: 'error',
-          msg: 'Cannot update info of ' + email,
+          content: 'Cannot update info of ' + email,
         });
         res.status(500).json('Cannot set timer');
       } else {
@@ -96,7 +110,7 @@ export default async function (req, res) {
             if (users.length == 0) {
               addLog({
                 code: 'error',
-                msg: 'Keep alive: cannot find user info'
+                content: 'Keep alive: cannot find user info'
               });
 
               clearInterval(loop);
@@ -106,14 +120,14 @@ export default async function (req, res) {
                 clearInterval(loop);
                 addLog({
                   code: 'stop',
-                  msg: `${email}: stopping`,
+                  content: `${email}: stopping`,
                 });
               } else {
                 // Not expired -> Keep alive
                 request(process.env.BOT_URL, (err, res, html) => {
                   err && addLog({
                     code: 'error',
-                    msg: 'Keep alive error: ' + JSON.stringify(err)
+                    content: 'Keep alive error: ' + JSON.stringify(err)
                   });
                 });
               }
@@ -126,7 +140,16 @@ export default async function (req, res) {
     // Listen to incoming message
     api.listen((err, message) => {
       if (!answeredThreads.hasOwnProperty(message.threadID)) {
+        // Answer group chat only when being mentioned, if not, return
+        if (message.isGroup) {
+          if (message.mentions) {
+            if (!message.mentions[api.getCurrentUserID()]) { return; }
+          }
+        }
+
+        // Mark as aswered
         answeredThreads[message.threadID] = true;
+
         // Get user data to fetch msg
         scanTable({
           table: 'Accounts',
@@ -136,12 +159,16 @@ export default async function (req, res) {
           if (users.length == 0) {
             addLog({
               code: 'error',
-              msg: 'Reply: cannot find user info'
+              content: 'Reply: cannot find user info'
             });
             api.sendMessage(defaultMsg, message.threadID);
           } else {
-            // Reply with msg
-            api.sendMessage(users[0].msg || defaultMsg, message.threadID);
+            if (users[0].stop > new Date().getTime()) {
+              // Reply with msg
+              let msg = users[0].msg || defaultMsg;
+              msg = (msg == 'default') ? defaultMsg : 'BOT: ' + msg;
+              api.sendMessage(msg, message.threadID);
+            }
           }
         });
       }

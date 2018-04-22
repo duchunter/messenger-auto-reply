@@ -23,14 +23,14 @@ export default function (req, res) {
       res.status(200).json('Ok');
       addLog({
         code: 'update',
-        msg: `${email}: stop - ${stop}, msg - ${msg}`
+        content: `${email}: stop - ${stop}, msg - ${msg}`
       });
     } else {
       // Cannot update data
       res.status(500).json('Internal error');
       addLog({
         code: 'error',
-        msg: `Cannot update timer of ${email}`
+        content: `Cannot update timer of ${email}`
       });
     }
   });
