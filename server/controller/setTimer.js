@@ -13,7 +13,7 @@ export default async function (req, res) {
   let answeredThreads = {};
 
   // Must-have data
-  let { email, stop, msg } = req.body;
+  let { email, stop, msg, useAppstate } = req.body;
   if (!email || !stop) {
     res.status(400).json('Missing info');
     return;
@@ -34,7 +34,7 @@ export default async function (req, res) {
   // Ok -> get appstate or credential to login
   let user = users[0];
   let credentials = {};
-  if (!user.appstate || user.appstate == 'null') {
+  if (!user.appstate || user.appstate == 'null' || !useAppstate) {
     credentials.email = user.email;
     credentials.password = user.password;
   } else {
@@ -43,13 +43,15 @@ export default async function (req, res) {
     } catch (e) {
       addLog({
         code: 'error',
-        content: 'Login err: cannot parse appstate'
+        content: 'Login err: cannot parse appstate for email ' + user.email
       });
       updateInTable({
         table: 'Accounts',
         condition: { email },
         changes: { appstate: 'null' }
       });
+
+      delete credentials.appstate;
       credentials.email = user.email;
       credentials.password = user.password;
     }
@@ -60,9 +62,10 @@ export default async function (req, res) {
     // Error
     if (err) {
       res.status(403).json(JSON.stringify(err));
+      console.log(err);
       addLog({
         code: 'error',
-        content: 'Login err: ' + JSON.stringify(err)
+        content: `Login ${user.email} err: ${JSON.stringify(err)}`
       });
       return;
     }
@@ -71,7 +74,7 @@ export default async function (req, res) {
     let start = new Date().getTime();
     addLog({
       code: 'login',
-      content: `Login success using ${user.appstate ? 'appstate' : 'user-pw'}. `
+      content: `Login ${email} success, appstate: ${!!credentials.appstate}. `
            + `Timer stop at ${new Date(stop).toString()}`,
     });
     api.setOptions({
@@ -79,15 +82,19 @@ export default async function (req, res) {
         logLevel: "silent"
     });
 
+    let appstate = credentials.appstate
+      ? user.appstate
+      : JSON.stringify(api.getAppState());
+
     // Save info in db
     updateInTable({
       table: 'Accounts',
       condition: { email },
       changes: {
+        appstate,
         start,
         stop,
         msg: msg || defaultMsg,
-        appstate: user.appstate || JSON.stringify(api.getAppState()),
       },
     }).then(success => {
       // If cannot save info to db
@@ -110,7 +117,7 @@ export default async function (req, res) {
             if (users.length == 0) {
               addLog({
                 code: 'error',
-                content: 'Keep alive: cannot find user info'
+                content: 'Keep alive: cannot find user info of ' + email
               });
 
               clearInterval(loop);
@@ -127,7 +134,7 @@ export default async function (req, res) {
                 request(process.env.BOT_URL, (err, res, html) => {
                   err && addLog({
                     code: 'error',
-                    content: 'Keep alive error: ' + JSON.stringify(err)
+                    content: `Ping ${email} error: ${JSON.stringify(err)}`
                   });
                 });
               }
@@ -159,7 +166,7 @@ export default async function (req, res) {
           if (users.length == 0) {
             addLog({
               code: 'error',
-              content: 'Reply: cannot find user info'
+              content: 'Reply: cannot find user info of ' + email
             });
             api.sendMessage(defaultMsg, message.threadID);
           } else {
