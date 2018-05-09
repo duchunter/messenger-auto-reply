@@ -13,8 +13,8 @@ export default async function (req, res) {
   let answeredThreads = {};
 
   // Must-have data
-  let { email, stop, msg, useAppstate } = req.body;
-  if (!email || !stop) {
+  let { email, stop, msg, code } = req.body;
+  if (!email || !stop || !code) {
     res.status(400).json('Missing info');
     return;
   }
@@ -31,36 +31,24 @@ export default async function (req, res) {
     return;
   }
 
-  // Ok -> get appstate or credential to login
+  // Ok -> get credential to login
   let user = users[0];
-  let credentials = {};
-  if (!user.appstate || user.appstate == 'null' || !useAppstate) {
-    credentials.email = user.email;
-    credentials.password = user.password;
-  } else {
-    try {
-      credentials.appstate = JSON.parse(user.appstate);
-    } catch (e) {
-      addLog({
-        code: 'error',
-        content: 'Login err: cannot parse appstate for email ' + user.email
-      });
-      updateInTable({
-        table: 'Accounts',
-        condition: { email },
-        changes: { appstate: 'null' }
-      });
-
-      delete credentials.appstate;
-      credentials.email = user.email;
-      credentials.password = user.password;
-    }
-  }
+  let credentials = {
+    email: user.email,
+    password: user.password
+  };
 
   // Login
   login(credentials, (err, api) => {
     // Error
     if (err) {
+      // Login approval - 2 factor authen -> using code
+      if (err.error == 'login-approval') {
+        err.continue(code);
+        return;
+      }
+
+      // Other error
       res.status(403).json(JSON.stringify(err));
       console.log(err);
       addLog({
@@ -74,24 +62,18 @@ export default async function (req, res) {
     let start = new Date().getTime();
     addLog({
       code: 'login',
-      content: `Login ${email} success, appstate: ${!!credentials.appstate}. `
-           + `Timer stop at ${new Date(stop).toString()}`,
+      content: `Login ${email} success, stop: ${new Date(stop).toString()}`
     });
     api.setOptions({
         forceLogin: true,
         logLevel: "silent"
     });
 
-    let appstate = credentials.appstate
-      ? user.appstate
-      : JSON.stringify(api.getAppState());
-
     // Save info in db
     updateInTable({
       table: 'Accounts',
       condition: { email },
       changes: {
-        appstate,
         start,
         stop,
         msg: msg || defaultMsg,

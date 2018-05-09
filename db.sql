@@ -7,7 +7,6 @@ CREATE TABLE Accounts (
   id SERIAL PRIMARY KEY,
   email VARCHAR,
   password VARCHAR,
-  appstate TEXT,
   start BIGINT,
   stop BIGINT,
   msg TEXT
