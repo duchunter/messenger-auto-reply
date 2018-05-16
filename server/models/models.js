@@ -7,11 +7,9 @@ import read from './methods/read';
 import update from './methods/update';
 import remove from './methods/remove';
 
-const pgp = pg({
-  promiseLib: promise
-});
+const pgp = pg({ promiseLib: promise });
 
-// Comment this when deploy
+// Connection string use for local testing only
 const connectionString = 'postgres://localhost:5432/replybot';
 const db = pgp(process.env.DATABASE_URL || connectionString);
 

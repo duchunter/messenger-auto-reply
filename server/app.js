@@ -1,3 +1,4 @@
+// Auto generated using express-generator
 import express from 'express';
 import path from 'path';
 import favicon from 'serve-favicon';
@@ -5,10 +6,11 @@ import logger from 'morgan';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-
 import index from './routes/index';
 
 const app = express();
+
+// Allow cors
 app.use(cors());
 
 // view engine setup
@@ -23,6 +25,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// All route here
 app.use('/', index);
 
 // catch 404 and forward to error handler

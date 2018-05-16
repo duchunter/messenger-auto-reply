@@ -4,7 +4,6 @@ import { addLog } from '../../utils/log';
 export default async function ({ db, table, changes, condition }) {
   // Must have changes and condition
   if (!changes || !condition) return false;
-  let result = true;
 
   // Parse changes to format `key='value'`
   let update = parse(changes, ', ');
@@ -19,11 +18,10 @@ export default async function ({ db, table, changes, condition }) {
     // ERROR
     addLog({
       code: 'error',
-      content:
-        `Model: update ${table} set ${update} where ${query}`,
+      content: `Model: update ${table} set ${update} where ${query}`,
     });
-    result = false;
+    return false;
   }
 
-  return result;
+  return true;
 }

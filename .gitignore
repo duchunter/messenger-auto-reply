@@ -3,3 +3,4 @@ node_modules
 build
 server/utils/sendLog.js
 server/utils/auth0Config.js
+server/utils/apiaiConfig.js

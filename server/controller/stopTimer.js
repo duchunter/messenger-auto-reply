@@ -16,9 +16,7 @@ export default function (req, res) {
   updateInTable({
     table: 'Accounts',
     condition: { email },
-    changes: {
-      stop: new Date().getTime(),
-    }
+    changes: { stop: new Date().getTime() }
   }).then(success => {
     if (success) {
       // Done -> response and add log

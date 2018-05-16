@@ -12,7 +12,7 @@ export default function (req, res) {
     return;
   }
 
-  // Update db
+  // Update db with new data
   updateInTable({
     table: 'Accounts',
     condition: { email },

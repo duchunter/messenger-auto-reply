@@ -1,11 +1,11 @@
 'use strict'
 
-// Special code
+// Special code, choose any encoding you want
 let transform = {};
-transform['This_is_a_quote'] = `'`;
-transform['This_is_a_double_quote'] = '"'
-transform['This_is_left_parenthesis'] = '(';
-transform['This_is_right_parenthesis'] = ')';
+transform['a_quote'] = `'`;
+transform['a_double_quote'] = '"'
+transform['left_parenthesis'] = '(';
+transform['right_parenthesis'] = ')';
 
 // Replace sql character to prevent sql injection
 export function noInjection(str) {

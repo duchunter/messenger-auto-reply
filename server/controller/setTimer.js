@@ -2,15 +2,17 @@
 
 import request from "request";
 import login from "facebook-chat-api";
+import handleInbox from '../utils/handleInbox';
 import { addLog } from '../utils/log';
 import { scanTable, updateInTable } from '../models/models';
 
+// Some default value
 const period = 1790000; // 29:50
 const defaultMsg = `BOT: I'm currently busy, please leave a message here, i will reply as soon as posible`;
 
 export default async function (req, res) {
-  // Make sure just answer once
-  let answeredThreads = {};
+  let answeredThreads = {};   // Make sure just answer once
+  let chatThreads = {};       // If anyone want to chat with a bot :v
 
   // Must-have data
   let { email, stop, msg, code } = req.body;
@@ -22,7 +24,7 @@ export default async function (req, res) {
   // Get user info
   let users = await scanTable({
     table: 'Accounts',
-    condition: { email },
+    condition: { email }
   });
 
   // If user not exist
@@ -59,14 +61,15 @@ export default async function (req, res) {
     }
 
     // If ok, set option and update info
-    let start = new Date().getTime();
     addLog({
       code: 'login',
       content: `Login ${email} success, stop: ${new Date(stop).toString()}`
     });
+
+    // Login setup
     api.setOptions({
-        forceLogin: true,
-        logLevel: "silent"
+      forceLogin: true,
+      logLevel: "silent"
     });
 
     // Save info in db
@@ -74,8 +77,8 @@ export default async function (req, res) {
       table: 'Accounts',
       condition: { email },
       changes: {
-        start,
         stop,
+        start: new Date().getTime(),
         msg: msg || defaultMsg,
       },
     }).then(success => {
@@ -128,39 +131,9 @@ export default async function (req, res) {
 
     // Listen to incoming message
     api.listen((err, message) => {
-      if (!answeredThreads.hasOwnProperty(message.threadID)) {
-        // Answer group chat only when being mentioned, if not, return
-        if (message.isGroup) {
-          if (message.mentions) {
-            if (!message.mentions[api.getCurrentUserID()]) { return; }
-          }
-        }
-
-        // Mark as aswered
-        answeredThreads[message.threadID] = true;
-
-        // Get user data to fetch msg
-        scanTable({
-          table: 'Accounts',
-          condition: { email }
-        }).then(users => {
-          // User not exist (somehow) -> reply with default msg
-          if (users.length == 0) {
-            addLog({
-              code: 'error',
-              content: 'Reply: cannot find user info of ' + email
-            });
-            api.sendMessage(defaultMsg, message.threadID);
-          } else {
-            if (users[0].stop > new Date().getTime()) {
-              // Reply with msg
-              let msg = users[0].msg || defaultMsg;
-              msg = (msg == 'default') ? defaultMsg : 'BOT: ' + msg;
-              api.sendMessage(msg, message.threadID);
-            }
-          }
-        });
-      }
+      console.log(1);
+      console.log(message);
+      handleInbox(api, err, message, answeredThreads, chatThreads);
     });
   });
 }

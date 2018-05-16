@@ -4,7 +4,6 @@ import { addLog } from '../../utils/log';
 export default async function ({ db, table, condition }) {
   // Must have condition
   if(!condition) return false;
-  let result = true;
 
   // Parse condition
   let query = parse(condition, ' and ');
@@ -18,8 +17,8 @@ export default async function ({ db, table, condition }) {
       code: 'error',
       content: `Model: delete from ${table} where ${query}`,
     });
-    result = false;
+    return false;
   }
 
-  return result;
+  return true;
 }

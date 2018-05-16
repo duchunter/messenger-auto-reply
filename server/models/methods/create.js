@@ -4,7 +4,6 @@ import { noInjection } from '../security';
 export default async function ({ db, table, data }) {
   // Must have data
   if (!data) return false;
-  let result = true;
 
   // Parse keys and values from data
   let keys = Object.keys(data).filter(key => !!data[key]);
@@ -21,11 +20,10 @@ export default async function ({ db, table, data }) {
     // ERROR
     addLog({
       code: 'error',
-      content:
-        `Model: insert into ${table} (${keys}) values (${values})`,
+      content: `Model: insert into ${table} (${keys}) values (${values})`,
     });
-    result = false;
+    return false;
   }
 
-  return result;
+  return true;
 }

@@ -2,32 +2,36 @@
 
 import express from 'express';
 import jwtAuthz from 'express-jwt-authz';
-
 import { authCheck } from '../utils/auth0';
-import sendLog from '../utils/sendLog';
 import setTimer from '../controller/setTimer';
 import stopTimer from '../controller/stopTimer';
 import updateTimer from '../controller/updateTimer';
 
+// Comment this if you cloned this project
+import sendLog from '../utils/sendLog';
+
 const router = express.Router();
+
+// Only response to request from Admin
 const scopeCheck = jwtAuthz(['admin']);
 
-/* GET home page. */
+// No front-end provided -> send default home page
 router.get('/', function(req, res, next) {
   console.log('Ping');
   res.render('index', { title: 'Express' });
 });
 
-// POST timer
+// POST set timer
 router.post('/api/set', authCheck, scopeCheck, setTimer);
 
-// POST stop
+// POST stop timer
 router.post('/api/stop', authCheck, scopeCheck, stopTimer);
 
 // POST update timer or message
 router.post('/api/update', authCheck, scopeCheck, updateTimer);
 
-// Request instant log transfer
+// POST send log to log server
+// Comment this route if you cloned this project
 router.post('/api/log', authCheck, scopeCheck, (req, res) => {
   sendLog(req.headers.authorization).then(isSuccess => {
     if (isSuccess) {
