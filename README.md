@@ -40,6 +40,7 @@ insert into Accounts (email, password) values ('YOUR_EMAIL', 'YOUR_PASSWORD');
 >Your Facebook account must have 2 factors authentication enabled
 
 ### 3. Build Setup
+- Create ```.env``` with 1 line: ```BOT_URL=https://[YOUR_BOT_URL].herokuapp.com```
 - Open ```server/routes/index.js``` and comment as guided in line 10 and line 34
 - Install dependencies and build file:
 ``` bash
@@ -50,4 +51,5 @@ npm run build
 - Push to Heroku
 
 ### 4. Using bot
-- Refer to [bot-manager project](https://github.com/duchunter/bot-manager) :)
+- Use [bot-manager app](https://github.com/duchunter/bot-manager) :)
+- Or simply send an api containing authentication header (Bearer 'access_token') + data required to a specific route
